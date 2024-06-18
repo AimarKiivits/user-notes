@@ -48,6 +48,44 @@ const register = (req, res) => {
     })
 }
 
+const login = (req, res) => {
+    if (!req.body.username || !req.body.password) {
+        return res.status(400).json({
+            message: 'All fields are required'
+        });
+    }
+
+    User.findOne({
+        where: {
+            username: req.body.username
+        }
+    })
+    .then(user => {
+        if (!user) {
+            return res.status(400).json({
+                message: 'Invalid username or password'
+            });
+        }
+
+        bcrypt.compare(req.body.password, user.password, (err, result) => {
+            if (result) {
+                req.session.user = {
+                    username: user.username,
+                    user_id: user.id
+                };
+                return res.json({
+                    message: 'User logged in successfully',
+                    session: req.session.user
+                });
+            }
+            res.status(400).json({
+                message: 'Invalid username or password'
+            });
+        })
+    })
+}
+
 module.exports = {
-    register
+    register,
+    login
 }       
